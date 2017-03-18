@@ -10,12 +10,12 @@
 
 #define N 10000
 #define D 128
-#define K floor(log2(N))
+#define K floor(log2(N)/2)
 #define M 1
 #define Q 100
 #define T double
 #define bitT char
-#define MAX_PNTS_TO_SEARCH N/10
+#define MAX_PNTS_TO_SEARCH N/100
 #define THREADS_NO 1
 #define RADIUS 1
 
@@ -32,13 +32,7 @@ int main()
   	std::vector<T> pointset(N * D);
 
   	std::cout << "N = " << N << ", D = " << D << ", K = " << K << ", MAX_PNTS_TO_SEARCH = " << MAX_PNTS_TO_SEARCH << std::endl;
-
-  	//read_points_IDX_format<T>(pointset, N, D, "/Users/gsamaras/Code/C++/create_pointset/MNIST/train-images-idx3-ubyte");
   	readfvecs(pointset, N, D, "./siftsmall/siftsmall_base.fvecs");
-	//print_2D_vector<T>(pointset, N, D);
-
-
-
   	using namespace std::chrono;
   	high_resolution_clock::time_point t1 = high_resolution_clock::now();
   	double r=300;
@@ -58,20 +52,14 @@ int main()
 	
   	// QUERY
   	std::vector<T> query(Q * D);
-  	//read_points_IDX_format<T>(query, Q, D, "/Users/gsamaras/Code/C++/create_pointset/MNIST/t10k-images-idx3-ubyte");
   	readfvecs(query, Q, D, "./siftsmall/siftsmall_query.fvecs");
     std::vector< std::vector<std::pair<int, float>> > results_idxs(Q, std::vector<std::pair<int, float>>(M));
 
   	t1 = high_resolution_clock::now();
 
-        //hypercube.radius_query(query, Q, RADIUS, MAX_PNTS_TO_SEARCH, results_idxs, THREADS_NO);
     hypercube.m_nearest_neighbors_query(query, Q, M,  MAX_PNTS_TO_SEARCH, results_idxs, THREADS_NO);
     //nearest_neighbor_query(std::vector<std::pair<int, float>>& results_idxs_dists, const int threads_no = std::thread::hardware_concurrency())
-
-
-
-
-  	t2 = high_resolution_clock::now();
+	t2 = high_resolution_clock::now();
   	time_span = duration_cast<duration<double>>(t2 - t1);
  
   	std::cout << "Search: " << time_span.count()/(double)Q << " seconds.\n";
@@ -82,6 +70,7 @@ int main()
   	double cur_mind;
   	int cur_mini;
   	std::vector<int> brute_results_idxs(Q);
+  	std::vector<double> brute_results_dists(Q);
   	for(int q = 0; q < Q; ++q)
   	{
   			cur_mind=squared_Eucl_distance(query.begin() + q * D, (query.begin() + q * D) + D, pointset.begin() );
@@ -97,23 +86,25 @@ int main()
       		}
     	    }
     	    brute_results_idxs[q] = cur_mini;
+    	    brute_results_dists[q]=sqrt(squared_Eucl_distance(query.begin() + q * D, (query.begin() + q * D) + D, pointset.begin() + cur_mini * D));
   	}
 
   	t2 = high_resolution_clock::now();
   	time_span = duration_cast<duration<double>>(t2 - t1);
  
   	std::cout << "Brute force: " << time_span.count()/(double)Q << " seconds.\n";
-
-
   	//print_2D_vector(results_idxs, Q, M);
   	//print_1D_vector(brute_results_idxs);
   	int correct = 0;
+  	double apprx=0;
   	for(int q = 0; q < Q; ++q){
+  		apprx+=sqrt(results_idxs[q][0].second)/brute_results_dists[q];
   		for(int j=0; j<M; ++j){
-			if (results_idxs[q][j].first== brute_results_idxs[q] )
+  			if (results_idxs[q][j].first== brute_results_idxs[q] )
 				correct++;
   		}
   	}
+  	std::cout<<"Average approximation ratio "<<apprx/Q<<std::endl;
   	std::cout << "Correct = " << (correct * 100)/(double)Q << "% , correct = " << correct << ", Q = " << Q << std::endl;
 
   	return 0;
