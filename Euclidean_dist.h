@@ -97,9 +97,8 @@ void find_M_Nearest_Neighbor_indices(iterator pointset, const std::vector<int>& 
   for(int j=1; j<M; ++j){
 	  if(current_dist < answer_point_idx_dist[j].second){
 		  current_dist=answer_point_idx_dist[j].second;
-		  current_j=answer_point_idx_dist[j].first;
+		  current_j=j;
 	  }
-
   }
   for(int i = 0; i < threshold && i < size; ++i)
   {
@@ -111,7 +110,7 @@ void find_M_Nearest_Neighbor_indices(iterator pointset, const std::vector<int>& 
       for(int j=0; j<M; ++j){
 		  if(current_dist < answer_point_idx_dist[j].second){
 			  current_dist=answer_point_idx_dist[j].second;
-			  current_j=answer_point_idx_dist[j].first;
+			  current_j=j;
 		  }
 
 		}
