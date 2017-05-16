@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "hash.h"
-
+#include <algorithm>
 #include <thread>
 #include <iterator>
 #include <utility>
@@ -192,6 +192,10 @@ namespace Dolphinn
       }
     }
 
+    static bool pairCompare(const std::pair<int, float>& firstElem, const std::pair<int, float>& secondElem) {
+      return firstElem.second < secondElem.second;
+    }
+
     /** \brief Nearest Neighbor query in the Hamming cube.
       *
       * @param query               - vector of queries
@@ -212,6 +216,7 @@ namespace Dolphinn
             H[k].assign_random_bit_query((std::begin(query) + q * D), (std::begin(mapped_query) + q * K), k);
           }
           results_idxs_dists[q] = H[K - 1].m_nearest_neighbors_query(std::string(mapped_query.begin() + q * K, mapped_query.begin() + (q + 1) * K), K, m, MAX_PNTS_TO_SEARCH, pointset.begin(), query.begin() + q * D);
+          std::sort(results_idxs_dists[q].begin(),results_idxs_dists[q].end(), pairCompare);
         }
       }
       else
